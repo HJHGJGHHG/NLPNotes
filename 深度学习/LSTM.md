@@ -91,7 +91,7 @@ $$
 &emsp;&emsp;有：
 $$
 \begin{alignat}{2}
-\boldsymbol {\tilde{C_t}}&=\sigma(\boldsymbol{{W}_{xC}}\boldsymbol{x_t}+\boldsymbol{{W}_{hC}}\boldsymbol{h_{t-1}}+\boldsymbol{b_C})\\
+\boldsymbol {\tilde{C_t}}&=\phi(\boldsymbol{{W}_{xC}}\boldsymbol{x_t}+\boldsymbol{{W}_{hC}}\boldsymbol{h_{t-1}}+\boldsymbol{b_C})\\
 \boldsymbol{i_{t}}&=\sigma(\boldsymbol{{W}_{xi}}\boldsymbol{x_t}+\boldsymbol{{W}_{hi}}\boldsymbol{h_{t-1}}+\boldsymbol{b_i})\\
 & \ \ \ \boldsymbol {C_t^{(i)}}=\boldsymbol {C_t^{(f)}}+\boldsymbol{i_{t}} \odot \boldsymbol{C_{t}^{(f)}}
 \end{alignat}
@@ -104,7 +104,7 @@ $$
 $$
 \begin{alignat}{2}
 \boldsymbol{o_{t}}=\sigma(\boldsymbol{{W}_{xo}}\boldsymbol{x_t}+&\boldsymbol{{W}_{ho}}\boldsymbol{h_{t-1}}+\boldsymbol{b_o}) \\
-\boldsymbol {h_t}=\boldsymbol{o_{t}} &\odot\boldsymbol {C_t^{(i)}}\\
+\boldsymbol {h_t}=\boldsymbol{o_{t}} &\odot \phi(\boldsymbol {C_t^{(i)}})\\
 \boldsymbol {C_t}= & \ \boldsymbol {C_t^{(i)}}  \\
 
 \end{alignat}
@@ -131,29 +131,134 @@ $$
 
 #### 4.2 记忆
 <center><img src="C:/Users/HJHGJGHHG/Desktop/AI/NLP笔记/深度学习/img/LSTM12.png"  style="zoom:30%;" width="140%"/></center>
-&emsp;&emsp;LSTM 的第二步是决定要让多少新的信息加入到细胞状态中。这又包含两个部分：一是加入什么信息？是通过 $tanh$​ 层构建的暂时细胞状态 $\boldsymbol {\tilde{C_t}}$​。而是加多少进细胞状态？这是由门控因子 $i_t$​ 实现。很多资料中都将这个门称为输入门，也是 $i$​ 的名称来源 $i\ for\ input$​​。而我更倾向于称其为记忆门，控制将多少输入的信息记忆进细胞状态中。
+&emsp;&emsp;LSTM 的第二步是决定要让多少新的信息加入到细胞状态中。这又包含两个部分：一是加入什么信息？是通过 $tanh$​ 层构建的暂时细胞状态 $\boldsymbol {\tilde{C_t}}$​。而是加多少进细胞状态？这是由门控因子 $i_t$​ 实现。很多资料中都将这个门称为输入门，也是 $i$​ 的名称来源 $(i\ for\ input)$​​。而我更倾向于称其为记忆门，控制将多少输入的信息记忆进细胞状态中。
 &emsp;&emsp;仍以中译英模型为例，我们开始描述一个新的主语时，不仅需要适当遗忘旧的主语信息，还应将新的主语信息加入进细胞状态。
 
 #### 4.3 输出
 <center><img src="C:/Users/HJHGJGHHG/Desktop/AI/NLP笔记/深度学习/img/LSTM13.png"  style="zoom:30%;" width="140%"/></center>
-&emsp;&emsp;最后，我们需要决定输出了，通过门控因子 $o_t\ (o\ for\ output)$实现控制。
+&emsp;&emsp;最后，我们需要决定输出了，通过门控因子 $o_t\ (o\ for\ output)$ 实现控制。
 &emsp;&emsp;接着上文中的中译英模型，在翻译到谓语时，细胞状态中包含的主语信息对该细胞的翻译输出影响显著，那么我们需要通过输出门控制相应的输出。
 
 #### 4.4 LSTM的前向计算公式
 &emsp;&emsp;我们对所有公式写在一起，就得到了 LSTM 的前向公式了。结合图片与公式，理解应该会深刻很多。
+<center><img src="C:/Users/HJHGJGHHG/Desktop/AI/NLP笔记/深度学习/img/LSTM3.png"  style="zoom:30%;" width="60%"/></center>
+
 $$
 \begin{alignat}{2}
 \boldsymbol {forget}:&\\
 &\boldsymbol{f_{t}}=\sigma(\boldsymbol{{W}_{xf}}\boldsymbol{x_t}+\boldsymbol{{W}_{hf}}\boldsymbol{h_{t-1}}+\boldsymbol{b_f})\\
 &\boldsymbol {C_t^{(f)}}=\boldsymbol{f_{t}} \odot \boldsymbol{C_{t-1}}\\
 \boldsymbol {input:}&\\
-&\boldsymbol {\tilde{C_t}}=\sigma(\boldsymbol{{W}_{xC}}\boldsymbol{x_t}+\boldsymbol{{W}_{hC}}\boldsymbol{h_{t-1}}+\boldsymbol{b_C})\\
+&\boldsymbol {\tilde{C_t}}=\phi(\boldsymbol{{W}_{xC}}\boldsymbol{x_t}+\boldsymbol{{W}_{hC}}\boldsymbol{h_{t-1}}+\boldsymbol{b_C})\\
 &\boldsymbol{i_{t}}=\sigma(\boldsymbol{{W}_{xi}}\boldsymbol{x_t}+\boldsymbol{{W}_{hi}}\boldsymbol{h_{t-1}}+\boldsymbol{b_i})\\
 &\boldsymbol {C_t^{(i)}}=\boldsymbol {C_t^{(f)}}+\boldsymbol{i_{t}} \odot \boldsymbol{C_{t}^{(f)}}\\
 \boldsymbol {output:}&\\
 &\boldsymbol{o_{t}}=\sigma(\boldsymbol{{W}_{xo}}\boldsymbol{x_t}+\boldsymbol{{W}_{ho}}\boldsymbol{h_{t-1}}+\boldsymbol{b_o}) \\
-&\boldsymbol {h_t}=\boldsymbol{o_{t}} \odot\boldsymbol {C_t^{(i)}}\\
+&\boldsymbol {h_t}=\boldsymbol{o_{t}} \odot \phi (\boldsymbol {C_t^{(i)}})\\
 &\boldsymbol {C_t}=  \ \boldsymbol {C_t^{(i)}}  \\
 
+\end{alignat}
+$$
+
+&emsp;&emsp;门控小结：
+* 遗忘门：判断上一细胞状态对本细胞状态的重要性；
+* 记忆门：判断当前输入对全局的重要性；
+* 输出门：判断前文信息对本细胞输出的重要性。
+
+---
+
+## 三、LSTM的后向传播（标量版）
+&emsp;&emsp;接下来我们推导 LSTM 的后向误差传播公式，与 RNN 篇一样，公式为标量版，省去比较矩阵形状、转置等等过程，快速理解原理。
+&emsp;&emsp;设一序列 $\boldsymbol{S}=\{x_1,x_2,\cdots,x_T\}$，其中时间步 $t$ 下的输入 $x_t$ 为标量。每一时间步均有一隐藏层输出 $h_t$ 、一预测输出 $\hat y_t$ 与一标签 $y_t$。设输出层激活函数为 $sigmoid$，损失函数为二元交叉熵。
+$$
+\begin{alignat}{2}
+E&=-[y \log \hat y +(1-y)\log (1-\hat y)] \\
+&\quad\quad\quad\hat y=\sigma(Vh+c)
+\end{alignat}
+$$
+### 1.后向传播的目标
+&emsp;&emsp;在公式推导之前，我们需要明确求解目标。
+* 已知：任意时间步的输入 $x_t$、输出 $\hat y_t$、最后时间步的细胞状态 $C_T$ 以及隐藏层状态 $h_T$
+* 求解目标：
+	1. 权重：$W_{xf}、W_{hf},W_{xi}、W_{hi},W_{xC}、W_{hC},W_{xo}、W_{ho}$
+	2. 偏置：$b_f,f_i,b_C,b_o$
+	    &emsp;&emsp;由于 $V,c$ 仅与当前的误差有关，与 RNN 高度相似，故此处略去。
+
+### 2.损失函数
+&emsp;&emsp;LSTM 与 RNN 一样，一个细胞既有来自自身的输出误差，也有来源于后续时间步的误差。将损失函数分段如下：
+$$
+\begin{alignat}{2}L_t=
+\begin{cases}
+l_t\ +\ L_{t+1},\ t<T\\
+l_t,\ t=T
+\end{cases}
+\end{alignat}
+$$
+&emsp;&emsp;其中：
+$$
+l_t=-[y_t \log \hat y_t +(1-y_t)\log (1-\hat y_t)] \\
+$$
+
+### 3.隐藏状态梯度 $\delta h_t$ 与细胞状态梯度 $\delta C_t$ 
+&emsp;&emsp;为了便于推导，我们定义两个中间量：隐藏状态梯度 $\delta h_t$ 与细胞状态梯度 $\delta C_t$ 。
+$$
+\begin{alignat}{2}
+\delta C_t &= \frac{\partial L_t}{\partial C_t} \\
+\delta h_t &= \frac{\partial L_t}{\partial h_t}
+\end{alignat}
+$$
+&emsp;&emsp;对于最后一个时间步 $t=T$：
+$$
+\begin{alignat}{2}
+\delta h_T &= \frac{\partial l_T}{\partial h_T}
+=\frac{\partial l_T}{\partial \hat y_T}\cdot \frac{\partial \hat y_T}{\partial h_T}\\
+&=\frac{-\partial[y_T \log \hat y_T +(1-y_T)\log (1-\hat y_T)]}{\partial \hat y_T} \cdot \frac{\partial[\sigma(Vh_t+c)]}{\partial h_T}\\
+&=V\cdot(\hat y_T-y_T)\\\\
+\delta C_T &= \frac{\partial l_T}{\partial C_T}= \frac{\partial l_T}{\partial h_T}\cdot \frac{\partial h_T}{\partial C_T}\\
+&=\delta h_T\cdot o_T\cdot \phi'(C_T)\\
+
+\end{alignat}
+$$
+&emsp;&emsp;现在我们来到了最困难的部分：利用 $\delta h_{t+1}$ 与 $\delta C_{t+1}$ 求解 $\delta h_t$ 与 $\delta C_t$。
+
+#### 3.1 $\delta h_t$
+&emsp;&emsp;对中间的任一细胞，$h_t$ 的梯度由本时间步的输出梯度误差和后续细胞的梯度共同决定，即：
+$$
+\begin{alignat}{2}
+\delta h_t &= \frac{\partial L_t}{\partial h_t}\\
+&=\frac{\partial l_t}{\partial h_t}+\frac{\partial L_{t+1}}{\partial h_{t+1}}\cdot\frac{\partial h_{t+1}}{\partial h_t}\\
+&=V\cdot(\hat y_T-y_T)+\delta h_{t+1}\cdot\frac{\partial h_{t+1}}{\partial h_t}
+\end{alignat}
+$$
+&emsp;&emsp;我们来仔细研究一下 $\frac{\partial h_{t+1}}{\partial h_t}$。$h_{t+1}=o_{t+1}\cdot \phi(C_{t+1})$，其中$o_{t+1}=\sigma({W}_{xo}x_{t+1}+{W}_{ho}h_{t}+b_o)$，$o_{t+1}$ 关于 $h_t$ 的偏导是好求的，关键在于 $\phi (C_{t+1})$，我们把它写开：
+$$
+\begin{alignat}{2}
+\phi(C_{t+1})&=\phi (f_{t+1}\cdot C_t +i_{t+1}\cdot \tilde C_{t+1})
+\end{alignat}
+$$
+&emsp;&emsp;$\phi (C_{t+1})$ 关于 $h_t$ 的偏导共四部分，$f_{t+1},i_{t+1},\tilde C_{t+1}$ 都是跟 $h_t$ 有关的。所以：
+$$
+\begin{alignat}{2}
+\frac{\partial h_{t+1}}{\partial h_t}&=\frac {\partial o_{t+1}}{\partial h_t}\cdot \phi (C_{t+1})+ o_{t+1}\cdot\frac{\partial \phi (C_{t+1})}{\partial h_t}\\
+&=W_{ho}\cdot o_{t+1}\cdot(1-o_{t+1})\cdot\phi (C_{t+1})\\
+&\quad\ +o_{t+1}\cdot\phi '(C_{t+1})[\frac{\partial f_{t+1}}{\partial h_t}\cdot C_t+f_{t+1}\cdot\frac{\partial C_t}{\partial h_t} \\& \quad \ +\frac{\partial i_{t+1}}{\partial h_t}\cdot \tilde C_{t+1}+i_{t+1}\cdot \frac{\partial \tilde C_t}{\partial h_t}
+]\\
+\end{alignat}
+$$
+&emsp;&emsp;公式太长就不再写开了，几个门控因子的偏导带入我们的前向公式即可。
+#### 3.2 $\delta C_t$
+&emsp;&emsp;接下来我们看 $\delta C_t$：
+$$
+\begin{alignat}{2}
+\delta C_t&=\frac{\partial L_t}{\partial C_t}=\frac{\partial L_t}{\partial C_{t+1}}\cdot\frac{\partial C_{t+1}}{\partial C_t}+\frac{\partial L_t}{\partial h_t}\cdot \frac{\partial h_t}{\partial C_t}\\
+&=\delta C_{t+1}\cdot f_{t+1}+\delta h_t \cdot o_t \cdot \phi '(C_t)
+\end{alignat}
+$$
+#### 3.3参数更新梯度求解
+&emsp;&emsp;有了 $\delta h_t$ 与 $\delta C_t$ 求解其他参数梯度就很简单了。我们以 $W_{xf}$ 为例：
+$$
+\begin{alignat}{2}
+\frac{\partial L}{\partial W_{xf}}&=\sum_{t=1}^T {\frac{\partial L_t}{\partial C_t}\cdot \frac{\partial C_t}{\partial f_t}\cdot\frac{\partial f_t}{\partial W_{xf}}}\\
+&=\sum_{t=1}^T {\delta C_t\cdot C_{t+1}\cdot f_t(1-f_t)\cdot x_t}
 \end{alignat}
 $$
