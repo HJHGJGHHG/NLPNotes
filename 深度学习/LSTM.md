@@ -113,7 +113,7 @@ $$
 
 #### 3.2 细胞状态 $C_t$
 &emsp;&emsp;接着我们来看 LSTM 中的核心思想：***细胞状态*** 以及它与上述门之间的关联。
-&emsp;&emsp;我们在概述中说到，LSTM 相较 RNN 加上了 $C$ 线，拓展了细胞间的关联。我们将所谓 $C$ 线上流动的信息称为细胞状态。观察 $C$ 线在细胞中的流动，它像一条传送带从整个 cell 中穿过，只是做了少量的线性操作。**这种结构能很轻松地实现信息从整个细胞中穿过而不做改变**。
+&emsp;&emsp;我们在概述中说到，LSTM 相较 RNN 加上了 $C$ 线，拓展了细胞间的关联。我们将所谓 $C$ 线上流动的信息称为细胞状态。观察 $C$ 线在细胞中的流动，它像一条传送带从整个细胞中穿过，只是做了少量的线性操作。**这种结构能很轻松地实现信息从整个细胞中穿过而不做改变**。
 
 <center><img src="C:/Users/HJHGJGHHG/Desktop/AI/NLP笔记/深度学习/img/LSTM10.png"  style="zoom:30%;" width="110%"/></center>
 
@@ -262,3 +262,27 @@ $$
 &=\sum_{t=1}^T {\delta C_t\cdot C_{t+1}\cdot f_t(1-f_t)\cdot x_t}
 \end{alignat}
 $$
+
+---
+
+## 四、LSTM如何缓解梯度消失？
+&emsp;&emsp;在 RNN 中，我们通过对参数更新梯度的分析解释了为什么会有严重的梯度消失问题，而在 LSTM 中，我们同样作此分析：直接考虑时间步 $t$ 下最初时间步 $t=1$ 的参数更新梯度，仍以 $W_{xf}$ 为例。
+$$
+\begin{alignat}{2}
+\frac{\partial L}{\partial W_{xf}}&=\frac {\partial L}{\partial h_t}\cdot\frac {\partial h_t}{\partial C_t}\cdot \prod_{\tau=2}^{t}({\frac{\partial C_\tau}{\partial C_{\tau -1}})\cdot \frac{\partial C_1}{\partial W_{xf}}}
+\end{alignat}
+$$
+&emsp;&emsp;其中除了连乘外的三项都有可能很小，但对梯度消失的贡献远没有连乘项大，只要它不趋于零梯度消失就不会很严重。对于连乘因子：$\frac{\partial C_\tau}{\partial C_{\tau -1}}$，考虑式(38)，为了推导方便我们设：
+$$
+\begin{alignat}{2}
+assume\ that:&\Delta C_\tau=\frac{\partial h_{\tau -1}}{\partial C_{\tau -1}}=o_{\tau -1}\cdot \phi'(C_{\tau -1})\\
+&\Alpha_\tau=\frac{\partial f_\tau}{\partial C_{\tau -1}}\cdot C_{\tau -1}\\
+&\Beta_\tau=\frac{\partial C_{\tau -1}}{\partial C_{\tau -1}}\cdot f_\tau\\
+&\Gamma_\tau=\frac{\partial i_{\tau}}{\partial C_{\tau -1}}\cdot \tilde C_\tau\\
+&\Epsilon_\tau=\frac{\partial\tilde C_\tau}{\partial C_{\tau -1}}\cdot i_{\tau}
+\end{alignat}
+$$
+&emsp;&emsp;可以看到 $\Alpha_\tau,\Gamma_\tau,\Epsilon_\tau$ 中依然有 $sigmoid$ 的导数，还是存在梯度消失，而 $\Beta_\tau=f_{\tau -1}$，加和上述四项后因为有 $f_{\tau -1}$ 我们是可以通过**控制遗忘门来避免使连乘因子在 [0,1] 间，从而缓解梯度消失问题**的。
+&emsp;&emsp;**直观来看**，我们在概述中有提到过，$C$ 线在细胞中间的流动只是做了少量的线性操作，梯度流是较稳定的；而 $h$ 线的四条路径上LSTM 的梯度流和普通 RNN 没有太大区别，依然会爆炸或者消失。由于总的远距离梯度 = 各条路径的远距离梯度之和，即便其他远距离路径梯度消失了，只要保证有**一条远距离梯度不消失，总的远距离梯度就不会消失**。
+&emsp;&emsp;值得一提的是，远古 LSTM 版本中没有遗忘门，或者说 $f \equiv 1$，这强制保证了梯度能传到最开始的细胞，但后来发现适当调整 $f$ 虽然还是有梯度消失的问题，但模型效果有较大提升，故而有了现在的版本。
+&emsp;&emsp;**梯度爆炸**：虽然 $C$ 线上的梯度较稳定，但其他路径上的梯度仍有可能爆炸，且有 总的远距离梯度 = 正常梯度 + 爆炸梯度 = 爆炸梯度，所以还是有可能发生梯度爆炸。但是由于 LSTM 相较 RNN 增加了更多 $tanh$ 或 $sigmoid$层，所以发生梯度爆炸的频率要小。
